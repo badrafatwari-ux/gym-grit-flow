@@ -43,7 +43,7 @@ export function GymApp() {
         )}
         {tab === "log" && (
           <WorkoutLogTab
-            onSaved={(m) => {
+            onSaved={(m?: number) => {
               if (m) setMilestone(m);
               setTab("today");
               refresh();
