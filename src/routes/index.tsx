@@ -1,26 +1,31 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
+import { GymApp } from "@/components/gym/GymApp";
 
 export const Route = createFileRoute("/")({
+  head: () => ({
+    meta: [
+      { title: "Gym Habit Builder — Build the habit. Become unstoppable." },
+      {
+        name: "description",
+        content:
+          "Consistency-first gym habit tracker. Log workouts, build streaks, level up.",
+      },
+      { property: "og:title", content: "Gym Habit Builder" },
+      {
+        property: "og:description",
+        content: "Build the habit. Become unstoppable.",
+      },
+    ],
+  }),
   component: Index,
 });
 
-// IMPORTANT: Replace this placeholder. For sites with multiple pages (About, Services, Contact, etc.),
-// create separate route files (about.tsx, services.tsx, contact.tsx) — don't put all pages in this file.
-function PlaceholderIndex() {
-  return (
-    <div
-      className="flex min-h-screen items-center justify-center"
-      style={{ backgroundColor: "#fcfbf8" }}
-    >
-      <img
-        data-lovable-blank-page-placeholder="REMOVE_THIS"
-        src="https://cdn.gpteng.co/blank-app-v1.svg"
-        alt="Your app will live here!"
-      />
-    </div>
-  );
-}
-
 function Index() {
-  return <PlaceholderIndex />;
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  if (!mounted) {
+    return <div className="min-h-screen bg-background" />;
+  }
+  return <GymApp />;
 }
