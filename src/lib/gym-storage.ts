@@ -189,6 +189,61 @@ export function saveWorkout(
   return { newMilestone, stats };
 }
 
+export function recomputeStats(): UserStats {
+  const settings = storage.getSettings();
+  const workouts = [...storage.getWorkouts()].sort((a, b) =>
+    a.date.localeCompare(b.date),
+  );
+  const stats: UserStats = { ...defaultStats };
+
+  for (const w of workouts) {
+    if (!w.isRest) {
+      stats.totalWorkouts += 1;
+      stats.totalMinutes += w.duration;
+      stats.totalXP += xpFor(w.effort);
+    }
+  }
+  stats.level = Math.floor(stats.totalXP / 100);
+
+  // Streak: walk unique dates
+  const uniqueDates = Array.from(new Set(workouts.map((w) => w.date))).sort();
+  let cur = 0;
+  let longest = 0;
+  let prev = "";
+  for (const d of uniqueDates) {
+    if (!prev) cur = 1;
+    else {
+      const gap = daysBetween(prev, d);
+      if (gap === 1) cur += 1;
+      else if (gap > 1) cur = settings.restDayCounts ? cur + 1 : 1;
+    }
+    if (cur > longest) longest = cur;
+    prev = d;
+  }
+  stats.currentStreak = cur;
+  stats.longestStreak = longest;
+  stats.lastWorkoutDate = uniqueDates[uniqueDates.length - 1] ?? "";
+  storage.setStats(stats);
+  return stats;
+}
+
+export function deleteWorkout(id: string): UserStats {
+  const workouts = storage.getWorkouts().filter((w) => w.id !== id);
+  storage.setWorkouts(workouts);
+  return recomputeStats();
+}
+
+export function updateWorkout(
+  id: string,
+  patch: Partial<Omit<Workout, "id">>,
+): UserStats {
+  const workouts = storage.getWorkouts().map((w) =>
+    w.id === id ? { ...w, ...patch } : w,
+  );
+  storage.setWorkouts(workouts);
+  return recomputeStats();
+}
+
 export function todayStatus(): "none" | "workout" | "rest" {
   const today = todayStr();
   const ws = storage.getWorkouts().filter((w) => w.date === today);
